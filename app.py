@@ -6,7 +6,6 @@ app = Flask(__name__)
 
 # MongoDB Atlas URI from environment variable
 uri = os.getenv("MONGO_URI")
-
 if not uri or not uri.startswith(("mongodb://", "mongodb+srv://")):
     raise ValueError("MONGO_URI is missing or incorrectly formatted.")
 
@@ -17,7 +16,7 @@ db = client["test_database"]
 signup_collection = db["signup_collection"]
 contact_collection = db["contact_collection"]
 
-# HTML Template with JS interactivity
+# HTML Template with Tabs
 template = """
 <!DOCTYPE html>
 <html>
@@ -25,27 +24,39 @@ template = """
     <title>Interactive Forms</title>
     <style>
         body {
-            background: #f4f4f4;
             font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 50px 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            padding-top: 50px;
+        }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 10px 30px;
+            border: none;
+            border-bottom: 2px solid transparent;
+            background: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            border-bottom: 2px solid #4CAF50;
+            font-weight: bold;
         }
         .form-container {
             background: white;
             padding: 30px 40px;
             border-radius: 12px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-            text-align: center;
             width: 400px;
-            margin-bottom: 30px;
+            display: none;
         }
-        h2 {
-            margin-bottom: 20px;
-            color: #333;
+        .form-container.active {
+            display: block;
         }
         input[type="text"], input[type="email"], textarea {
             width: 100%;
@@ -75,19 +86,19 @@ template = """
             margin-top: 15px;
             color: green;
             font-weight: bold;
-            animation: fadein 1s ease-in-out;
-        }
-        @keyframes fadein {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
     </style>
 </head>
 <body>
+    <div class="tabs">
+        <button class="tab-button active" onclick="showTab('signup')">Signup</button>
+        <button class="tab-button" onclick="showTab('contact')">Contact Us</button>
+    </div>
+
     <!-- Signup Form -->
-    <div class="form-container">
+    <div class="form-container active" id="signup-form">
         <h2>Signup</h2>
-        <form method="POST" action="/" onsubmit="return validateSignupForm()">
+        <form method="POST" action="/">
             <input type="text" name="signup_name" placeholder="Enter your name" value="{{ signup_name }}" required>
             <input type="email" name="signup_email" placeholder="Enter your email" value="{{ signup_email }}" required>
             <input type="submit" value="Signup">
@@ -98,9 +109,9 @@ template = """
     </div>
 
     <!-- Contact Us Form -->
-    <div class="form-container">
+    <div class="form-container" id="contact-form">
         <h2>Contact Us</h2>
-        <form method="POST" action="/contact" onsubmit="return validateContactForm()">
+        <form method="POST" action="/contact">
             <input type="text" name="contact_name" placeholder="Enter your name" value="{{ contact_name }}" required>
             <input type="email" name="contact_email" placeholder="Enter your email" value="{{ contact_email }}" required>
             <textarea name="contact_query" placeholder="Your query..." required>{{ contact_query }}</textarea>
@@ -112,25 +123,22 @@ template = """
     </div>
 
     <script>
-        function validateSignupForm() {
-            const name = document.querySelector('input[name="signup_name"]').value.trim();
-            const email = document.querySelector('input[name="signup_email"]').value.trim();
-            if (!name || !email) {
-                alert("Please fill out all Signup fields.");
-                return false;
-            }
-            return true;
-        }
+        function showTab(tab) {
+            const signupForm = document.getElementById('signup-form');
+            const contactForm = document.getElementById('contact-form');
+            const tabButtons = document.querySelectorAll('.tab-button');
 
-        function validateContactForm() {
-            const name = document.querySelector('input[name="contact_name"]').value.trim();
-            const email = document.querySelector('input[name="contact_email"]').value.trim();
-            const query = document.querySelector('textarea[name="contact_query"]').value.trim();
-            if (!name || !email || !query) {
-                alert("Please fill out all Contact fields.");
-                return false;
+            if (tab === 'signup') {
+                signupForm.classList.add('active');
+                contactForm.classList.remove('active');
+                tabButtons[0].classList.add('active');
+                tabButtons[1].classList.remove('active');
+            } else {
+                contactForm.classList.add('active');
+                signupForm.classList.remove('active');
+                tabButtons[1].classList.add('active');
+                tabButtons[0].classList.remove('active');
             }
-            return true;
         }
     </script>
 </body>
